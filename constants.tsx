@@ -39,3 +39,5 @@ export const VEHICLE_TYPES = ['Sedan', 'SUV', 'Minivan', 'Van'];
 export const ARMOR_TYPES = ['Conventional', 'Armored'];
 export const SERVICE_TYPES = ['Transfer', 'Daily'];
 export const STATUS_TYPES = ['Pending', 'In Progress', 'Completed', 'Cancelled'];
+export const PAYMENT_METHODS = ['PO', 'Credit Card'];
+export const CARD_TYPES = ['Visa', 'Mastercard', 'Amex', 'Diners'];

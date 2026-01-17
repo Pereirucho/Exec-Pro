@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <script>
         tailwind.config = {
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
@@ -28,6 +29,7 @@
     </script>
     <style>
         body { background-color: #F7F6F3; color: #101205; }
+        .dark body { background-color: #101205; color: #F7F6F3; }
         .mask-pii { filter: blur(4px); transition: filter 0.2s; }
         .mask-pii:hover { filter: blur(0); }
     </style>

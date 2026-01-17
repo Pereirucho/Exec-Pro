@@ -12,12 +12,16 @@ import {
   EyeOff,
   MapPin,
   Calendar as CalendarIcon,
-  ShieldAlert
+  ShieldAlert,
+  User,
+  CreditCard,
+  Building2,
+  FileText,
+  X
 } from 'lucide-react';
 import { mockCases, mockVehicles, mockPersonnel } from '../utils/mockData';
 import { Case } from '../types';
-// Fixed: Added SERVICE_TYPES to the import list from constants.tsx
-import { TRANSLATIONS, COUNTRIES, VEHICLE_TYPES, ARMOR_TYPES, STATUS_TYPES, SERVICE_TYPES } from '../constants';
+import { TRANSLATIONS, COUNTRIES, VEHICLE_TYPES, ARMOR_TYPES, STATUS_TYPES, SERVICE_TYPES, PAYMENT_METHODS, CARD_TYPES } from '../constants';
 
 interface OperationsProps {
   lang: 'pt' | 'es';
@@ -29,6 +33,10 @@ const Operations: React.FC<OperationsProps> = ({ lang }) => {
   const [showPII, setShowPII] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingCase, setEditingCase] = useState<Case | null>(null);
+
+  // Form State for multiple cities
+  const [tempCities, setTempCities] = useState<string[]>([]);
+  const [newCityInput, setNewCityInput] = useState('');
 
   const t = (key: string) => TRANSLATIONS[key]?.[lang] || key;
 
@@ -46,6 +54,17 @@ const Operations: React.FC<OperationsProps> = ({ lang }) => {
       case 'Cancelled': return 'bg-red-100 text-red-700';
       default: return 'bg-slate/5 text-slate';
     }
+  };
+
+  const addCity = () => {
+    if (newCityInput.trim()) {
+      setTempCities([...tempCities, newCityInput.trim()]);
+      setNewCityInput('');
+    }
+  };
+
+  const removeCity = (index: number) => {
+    setTempCities(tempCities.filter((_, i) => i !== index));
   };
 
   const filteredCases = cases.filter(c => 
@@ -76,7 +95,7 @@ const Operations: React.FC<OperationsProps> = ({ lang }) => {
             Exportar
           </button>
           <button 
-            onClick={() => { setEditingCase(null); setIsModalOpen(true); }}
+            onClick={() => { setEditingCase(null); setTempCities([]); setIsModalOpen(true); }}
             className="flex items-center gap-2 px-6 py-2 bg-primary text-offwhite rounded-xl text-sm font-bold hover:bg-primary/90 transition-all shadow-lg active:scale-95"
           >
             <Plus className="w-5 h-5" />
@@ -132,7 +151,7 @@ const Operations: React.FC<OperationsProps> = ({ lang }) => {
                     <div className="flex items-center gap-2">
                       <MapPin className="w-3 h-3 text-bronze" />
                       <div className="flex flex-col">
-                        <span className="text-sm text-charcoal">{c.city}</span>
+                        <span className="text-sm text-charcoal truncate max-w-[150px]">{c.city}</span>
                         <span className="text-[10px] text-slate/60 font-medium">{c.country}</span>
                       </div>
                     </div>
@@ -155,8 +174,8 @@ const Operations: React.FC<OperationsProps> = ({ lang }) => {
                     <div className="flex items-center gap-2">
                       <CalendarIcon className="w-3 h-3 text-slate/40" />
                       <div className="flex flex-col">
-                        <span className="text-xs text-slate font-medium">Início: {new Date(c.startDateTime).toLocaleDateString()}</span>
-                        <span className="text-xs text-slate/40">Fim: {new Date(c.endDateTime).toLocaleDateString()}</span>
+                        <span className="text-xs text-slate font-medium">{new Date(c.startDateTime).toLocaleDateString()}</span>
+                        <span className="text-xs text-slate/40 font-medium tracking-tight">a {new Date(c.endDateTime).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </td>
@@ -196,53 +215,210 @@ const Operations: React.FC<OperationsProps> = ({ lang }) => {
         </div>
       </div>
 
-      {/* Simple Modal Simulation */}
+      {/* Expanded Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-charcoal/40 backdrop-blur-sm p-4">
-          <div className="bg-white w-full max-w-2xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-300">
+          <div className="bg-white w-full max-w-4xl rounded-3xl shadow-2xl overflow-hidden animate-in zoom-in duration-300">
              <div className="bg-primary p-6 text-offwhite flex justify-between items-center">
-                <h3 className="text-xl font-bold">{editingCase ? t('editCase') : t('newCase')}</h3>
-                <button onClick={() => setIsModalOpen(false)} className="text-offwhite/50 hover:text-white transition-colors">
-                  &times; Fechar
+                <div className="flex items-center gap-3">
+                  <ShieldAlert className="text-accent w-6 h-6" />
+                  <h3 className="text-xl font-bold">{editingCase ? t('editCase') : t('newCase')}</h3>
+                </div>
+                <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-white/10 rounded-full transition-colors">
+                  <X className="w-5 h-5" />
                 </button>
              </div>
-             <div className="p-8 space-y-6 overflow-y-auto max-h-[80vh]">
-                <div className="grid grid-cols-2 gap-6">
+             <div className="p-8 space-y-8 overflow-y-auto max-h-[85vh]">
+                
+                {/* Section 1: General Info */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                    <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate/60 uppercase">Número do Projeto</label>
-                      <input type="text" className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-medium" defaultValue="EP-XXXXX" />
+                      <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest flex items-center gap-1">
+                        <FileText className="w-3 h-3" /> Projeto
+                      </label>
+                      <input type="text" className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-bold text-primary" placeholder="EP-XXXXX" />
                    </div>
-                   <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate/60 uppercase">Cliente</label>
-                      <input type="text" className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm" placeholder="Nome do Cliente ou Empresa" />
-                   </div>
-                   <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate/60 uppercase">Tipo de Serviço</label>
-                      <select className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm">
-                         {SERVICE_TYPES.map(s => <option key={s}>{s}</option>)}
-                      </select>
-                   </div>
-                   <div className="space-y-1">
-                      <label className="text-xs font-bold text-slate/60 uppercase">País</label>
-                      <select className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm">
-                         {COUNTRIES.map(c => <option key={c.code}>{c.name}</option>)}
-                      </select>
+                   <div className="space-y-1 md:col-span-2">
+                      <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest flex items-center gap-1">
+                        <User className="w-3 h-3" /> Cliente Principal
+                      </label>
+                      <input type="text" className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm" placeholder="Nome da Empresa ou VIP" />
                    </div>
                 </div>
-                
-                <div className="space-y-4">
-                   <div className="flex items-center gap-2 p-4 bg-accent/10 border border-accent/20 rounded-2xl">
-                      <ShieldAlert className="text-bronze w-5 h-5" />
-                      <div>
-                         <p className="text-sm font-bold text-bronze">Compliance LGPD</p>
-                         <p className="text-[10px] text-bronze/70">Todos os dados de agentes e motoristas serão mascarados na visualização pública por padrão.</p>
+
+                {/* Section 2: Vehicle & Security */}
+                <div className="bg-slate/5 p-6 rounded-2xl space-y-6">
+                  <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-slate/10 pb-2">Veículo e Segurança</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Tipo de Veículo</label>
+                      <select className="w-full p-3 bg-white rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm">
+                         {VEHICLE_TYPES.map(v => <option key={v}>{v}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Blindagem</label>
+                      <select className="w-full p-3 bg-white rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm">
+                         {ARMOR_TYPES.map(a => <option key={a}>{a}</option>)}
+                      </select>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Agente de Segurança</label>
+                      <div className="flex items-center gap-4 p-3 bg-white rounded-xl">
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name="agent" className="text-primary focus:ring-primary" />
+                          <span className="text-xs font-semibold">Sim</span>
+                        </label>
+                        <label className="flex items-center gap-2 cursor-pointer">
+                          <input type="radio" name="agent" className="text-primary focus:ring-primary" defaultChecked />
+                          <span className="text-xs font-semibold">Não</span>
+                        </label>
+                      </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Serviço</label>
+                      <select className="w-full p-3 bg-white rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm">
+                         {SERVICE_TYPES.map(s => <option key={s}>{s}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 3: Logistics (Multi-city & Hotel) */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-slate/10 pb-2">Logística de Cidades</h4>
+                    <div className="space-y-2">
+                       <div className="flex gap-2">
+                         <input 
+                           type="text" 
+                           className="flex-1 p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm" 
+                           placeholder="Adicionar cidade..."
+                           value={newCityInput}
+                           onChange={(e) => setNewCityInput(e.target.value)}
+                           onKeyDown={(e) => e.key === 'Enter' && addCity()}
+                         />
+                         <button 
+                           onClick={addCity}
+                           className="px-4 py-2 bg-bronze text-offwhite rounded-xl hover:bg-bronze/90 transition-all shadow-md active:scale-95"
+                         >
+                           <Plus className="w-5 h-5" />
+                         </button>
+                       </div>
+                       <div className="flex flex-wrap gap-2 min-h-[40px]">
+                         {tempCities.map((city, idx) => (
+                           <span key={idx} className="flex items-center gap-2 px-3 py-1.5 bg-accent text-primary text-xs font-bold rounded-lg shadow-sm">
+                             {city}
+                             <button onClick={() => removeCity(idx)} className="hover:text-red-600">
+                               <X className="w-3 h-3" />
+                             </button>
+                           </span>
+                         ))}
+                       </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest flex items-center gap-1">
+                        <Building2 className="w-3 h-3" /> Hotel / Ponto de Referência
+                      </label>
+                      <input type="text" className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm" placeholder="Nome do Hotel ou Base" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-slate/10 pb-2">Agenda Detalhada</h4>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Descrição da Agenda</label>
+                      <textarea className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm min-h-[120px]" placeholder="Liste os horários e paradas previstos..."></textarea>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Section 4: Calendar & Dates */}
+                <div className="bg-primary/5 p-6 rounded-2xl border border-primary/10">
+                   <div className="flex items-center justify-between mb-4">
+                      <h4 className="text-xs font-black text-primary uppercase tracking-widest">Configuração de Calendário</h4>
+                      <span className="text-[10px] text-bronze font-bold bg-accent/20 px-2 py-0.5 rounded">Fuso Horário Local</span>
+                   </div>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-1">
+                         <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Data/Hora Início</label>
+                         <input type="datetime-local" className="w-full p-3 bg-white rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-medium" />
+                      </div>
+                      <div className="space-y-1">
+                         <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Data/Hora Término</label>
+                         <input type="datetime-local" className="w-full p-3 bg-white rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-medium" />
                       </div>
                    </div>
                 </div>
 
-                <div className="flex justify-end gap-3 mt-8">
-                   <button onClick={() => setIsModalOpen(false)} className="px-6 py-2 text-sm font-bold text-slate hover:bg-slate/5 rounded-xl transition-all">{t('cancel')}</button>
-                   <button onClick={() => setIsModalOpen(false)} className="px-10 py-2 text-sm font-bold text-offwhite bg-primary rounded-xl hover:bg-primary/90 transition-all shadow-lg active:scale-95">{t('save')}</button>
+                {/* Section 5: Passenger & Billing */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-slate/10 pb-2">Dados do Passageiro</h4>
+                    <div className="space-y-4">
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Email Corporativo</label>
+                          <input type="email" className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm" placeholder="passageiro@email.com" />
+                       </div>
+                       <div className="space-y-1">
+                          <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Telefone (WhatsApp)</label>
+                          <input type="tel" className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm" placeholder="+55 (11) 99999-9999" />
+                       </div>
+                    </div>
+                  </div>
+
+                  <div className="space-y-4">
+                    <h4 className="text-xs font-black text-primary uppercase tracking-widest border-b border-slate/10 pb-2">Faturamento</h4>
+                    <div className="space-y-4">
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Forma Pagto</label>
+                             <select className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-bold">
+                                {PAYMENT_METHODS.map(m => <option key={m}>{m}</option>)}
+                             </select>
+                          </div>
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Tipo Cartão</label>
+                             <select className="w-full p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm">
+                                {CARD_TYPES.map(t => <option key={t}>{t}</option>)}
+                             </select>
+                          </div>
+                       </div>
+                       <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Custo Estimado</label>
+                             <div className="relative">
+                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate/40 text-xs font-bold">R$</span>
+                               <input type="number" className="w-full pl-9 p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-bold text-red-600" defaultValue="0" />
+                             </div>
+                          </div>
+                          <div className="space-y-1">
+                             <label className="text-[10px] font-bold text-slate/40 uppercase tracking-widest">Receita Bruta</label>
+                             <div className="relative">
+                               <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate/40 text-xs font-bold">R$</span>
+                               <input type="number" className="w-full pl-9 p-3 bg-offwhite rounded-xl border-none focus:ring-2 focus:ring-primary/20 text-sm font-bold text-green-600" defaultValue="0" />
+                             </div>
+                          </div>
+                       </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* LGPD Warning */}
+                <div className="flex items-center gap-3 p-4 bg-accent/10 border border-accent/20 rounded-2xl">
+                  <ShieldAlert className="text-bronze w-5 h-5 flex-shrink-0" />
+                  <div>
+                    <p className="text-sm font-bold text-bronze leading-tight">Protocolo de Confidencialidade (LGPD)</p>
+                    <p className="text-[10px] text-bronze/70 leading-relaxed font-medium">Os dados de contato do passageiro são criptografados em repouso. O acesso aos campos PII é registrado na trilha de auditoria.</p>
+                  </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-6 border-t border-slate/10">
+                   <button onClick={() => setIsModalOpen(false)} className="px-6 py-2.5 text-sm font-bold text-slate hover:bg-slate/5 rounded-xl transition-all">{t('cancel')}</button>
+                   <button onClick={() => setIsModalOpen(false)} className="px-12 py-2.5 text-sm font-black text-offwhite bg-primary rounded-xl hover:bg-primary/90 transition-all shadow-xl active:scale-95 flex items-center gap-2">
+                     <CreditCard className="w-4 h-4" />
+                     {t('save')}
+                   </button>
                 </div>
              </div>
           </div>
