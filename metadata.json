@@ -1,0 +1,8 @@
+{
+  "name": "Exec Pro",
+  "description": "Secure executive transportation management system designed for Latin American operations, featuring advanced logistics, security protocols, and LGPD compliance.",
+  "requestFramePermissions": [
+    "camera",
+    "geolocation"
+  ]
+}
